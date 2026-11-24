@@ -156,6 +156,39 @@ def fetch_cnbc_tag_bs4(ticker: str, meta: dict[str, str], limit: int = 5) -> lis
     return records
 
 
+def fetch_kontan_search_bs4(ticker: str, meta: dict[str, str], limit: int = 4) -> list[dict[str, Any]]:
+    """Scraping halaman pencarian Kontan.co.id menggunakan BeautifulSoup4."""
+    records: list[dict[str, Any]] = []
+    search_url = f"https://www.kontan.co.id/search/?search={urllib.parse.quote(ticker)}"
+    try:
+        resp = requests.get(search_url, headers=HEADERS, timeout=15)
+        resp.raise_for_status()
+        soup = BeautifulSoup(resp.text, "lxml")
+        for item in soup.select(".list-berita li h1 a, .list-berita li h2 a, .ket a"):
+            href = (item.get("href") or "").strip()
+            title = clean_title(item.get_text(" ", strip=True))
+            if len(title) < 20 or not href.startswith("http"):
+                continue
+            label, score = score_sentiment(title)
+            records.append({
+                "news_id": hashlib.sha1(f"{ticker}|{title.lower()}".encode()).hexdigest()[:14],
+                "ticker": ticker,
+                "emiten_name": meta["name"],
+                "title": title,
+                "source": "Kontan",
+                "published_at": dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%d %H:%M UTC"),
+                "sentiment_label": label,
+                "sentiment_score": score,
+                "url": href,
+                "ingestion_channel": "kontan_beautifulsoup",
+            })
+            if len(records) >= limit:
+                break
+    except Exception as exc:
+        print(f"[WARN] Kontan Search BS4 dilewati untuk {ticker}: {exc}")
+    return records
+
+
 def fetch_yahoo_market_snapshot(ticker: str, symbol: str) -> dict[str, Any]:
     """Mengambil ringkasan harga penutupan terbaru dari Yahoo Finance Chart API."""
     url = f"https://query1.finance.yahoo.com/v8/finance/chart/{urllib.parse.quote(symbol)}?range=5d&interval=1d"
@@ -216,16 +249,22 @@ def run_scraping(out_dir: str) -> dict[str, Any]:
     for ticker, meta in EMITENS.items():
         rss_rows = fetch_google_news_rss(ticker, meta, limit=6)
         cnbc_rows = fetch_cnbc_tag_bs4(ticker, meta, limit=4)
+        kontan_rows = fetch_kontan_search_bs4(ticker, meta, limit=3)
         all_news.extend(rss_rows)
         all_news.extend(cnbc_rows)
+        all_news.extend(kontan_rows)
         market_snapshots.append(fetch_yahoo_market_snapshot(ticker, meta["yahoo_symbol"]))
 
     if not all_news:
         print("[INFO] Menggunakan fallback berita deterministik.")
         all_news = fallback_records(now_iso)
 
+    quarter_idx = (now_utc.month - 1) // 3 + 1
+    quarter_label = f"{now_utc.year}Q{quarter_idx}"
+
     df = pd.DataFrame(all_news).drop_duplicates(subset=["news_id"]).reset_index(drop=True)
     df.insert(0, "timestamp_utc", now_iso)
+    df.insert(1, "quarter_period", quarter_label)
 
     csv_path = os.path.join(out_dir, "telecom_news_scraped.csv")
     json_path = os.path.join(out_dir, "telecom_news_scraped.json")
@@ -234,10 +273,14 @@ def run_scraping(out_dir: str) -> dict[str, Any]:
     df.to_csv(csv_path, index=False, encoding="utf-8")
     df.to_json(json_path, orient="records", indent=2, force_ascii=False)
 
+    mean_sent = {k: round(float(v), 4) for k, v in df.groupby("ticker")["sentiment_score"].mean().items()}
+
     summary = {
         "scraped_at_utc": now_iso,
+        "quarter_period": quarter_label,
         "total_articles": int(len(df)),
         "per_ticker": df["ticker"].value_counts().to_dict(),
+        "mean_sentiment_by_ticker": mean_sent,
         "sentiment_distribution": df["sentiment_label"].value_counts().to_dict(),
         "channels": df["ingestion_channel"].value_counts().to_dict(),
         "market_snapshots": market_snapshots,

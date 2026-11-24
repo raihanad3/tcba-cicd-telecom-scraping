@@ -12,6 +12,7 @@ import pandas as pd
 
 REQUIRED_COLUMNS = [
     "timestamp_utc",
+    "quarter_period",
     "news_id",
     "ticker",
     "emiten_name",
@@ -52,8 +53,10 @@ def validate_output(out_dir: str) -> None:
     with open(summary_path, "r", encoding="utf-8") as f:
         summary = json.load(f)
     assert summary["total_articles"] == len(df), "Ringkasan jumlah artikel tidak sinkron"
+    assert "quarter_period" in summary, "Field quarter_period wajib ada di summary"
+    assert "mean_sentiment_by_ticker" in summary, "Field mean_sentiment_by_ticker wajib ada di summary"
 
-    print(f"[CI PASS] Validasi sukses: {len(df)} artikel terverifikasi untuk ticker {sorted(df['ticker'].unique())}.")
+    print(f"[CI PASS] Validasi sukses ({summary['quarter_period']}): {len(df)} artikel terverifikasi untuk ticker {sorted(df['ticker'].unique())}.")
 
 
 def main() -> None:

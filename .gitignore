@@ -1,7 +1,14 @@
 __pycache__/
 *.pyc
-output/
+.venv/
+.pytest_cache/
 .env
+output/
+data/raw/*.json
+data/processed/*.csv
+data/processed/*.json
+data/fixture_out/
+data/live_out/
 *.png
 *.pdf
 *.docx

@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from typing import Final
 
 # Konstanta domain yang menjadi single source of truth bagi ingestion dan transformasi
-MAX_ARTICLES_PER_SOURCE = 6
+MAX_ARTICLES_PER_SOURCE = 10
 SENTIMENT_POSITIVE_THRESHOLD = 0.20
 SENTIMENT_NEGATIVE_THRESHOLD = -0.20
 DEFAULT_FALLBACK_USD_IDR = 15850.0

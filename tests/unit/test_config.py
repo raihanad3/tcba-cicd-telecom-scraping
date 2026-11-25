@@ -21,7 +21,7 @@ def test_emitens_match_final_project_theme() -> None:
 
 
 def test_domain_limits_and_thresholds() -> None:
-    assert MAX_ARTICLES_PER_SOURCE == 6
+    assert MAX_ARTICLES_PER_SOURCE == 10
     assert SENTIMENT_POSITIVE_THRESHOLD == 0.20
     assert SENTIMENT_NEGATIVE_THRESHOLD == -0.20
 

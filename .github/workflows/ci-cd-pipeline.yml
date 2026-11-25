@@ -43,7 +43,7 @@ jobs:
 
       - name: Run pytest unit & integration suite
         run: |
-          pytest -v
+          python -m pytest -v
 
       - name: Build and validate pipeline fixture output
         run: |

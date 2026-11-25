@@ -1,0 +1,95 @@
+{
+  "mode": "fixture",
+  "ingested_at_utc": "2026-11-25T00:00:00+00:00",
+  "macro_fx": {
+    "base": "USD",
+    "target": "IDR",
+    "usd_idr_rate": 15890.5,
+    "as_of_date": "2026-11-24",
+    "source": "Frankfurter ECB API",
+    "source_status": "fixture_reference"
+  },
+  "emitens": {
+    "TLKM": {
+      "ticker": "TLKM",
+      "emiten_name": "PT Telkom Indonesia (Persero) Tbk",
+      "market_snapshot": {
+        "ticker": "TLKM",
+        "symbol": "TLKM.JK",
+        "market_price_idr": 2780.0,
+        "prev_close_idr": 2740.0,
+        "change_5d_pct": 1.46,
+        "currency": "IDR",
+        "source_status": "fixture_reference"
+      },
+      "articles": [
+        {
+          "ticker": "TLKM",
+          "emiten_name": "PT Telkom Indonesia (Persero) Tbk",
+          "raw_title": "Telkom perluas kapasitas Data Center dan ekspansi 5G guna dorong laba - CNBC Indonesia",
+          "source": "CNBC Indonesia",
+          "published_at": "2026-11-24T10:00:00+00:00",
+          "url": "https://www.cnbcindonesia.com/market/tlkm-5g-datacenter",
+          "ingestion_channel": "fixture_sample"
+        },
+        {
+          "ticker": "TLKM",
+          "emiten_name": "PT Telkom Indonesia (Persero) Tbk",
+          "raw_title": "Investasi AI dan efisiensi operasional topang prospek dividen TLKM - Kontan",
+          "source": "Kontan",
+          "published_at": "2026-11-24T08:30:00+00:00",
+          "url": "https://investasi.kontan.co.id/news/tlkm-ai-dividen",
+          "ingestion_channel": "fixture_sample"
+        }
+      ]
+    },
+    "ISAT": {
+      "ticker": "ISAT",
+      "emiten_name": "PT Indosat Tbk",
+      "market_snapshot": {
+        "ticker": "ISAT",
+        "symbol": "ISAT.JK",
+        "market_price_idr": 2410.0,
+        "prev_close_idr": 2380.0,
+        "change_5d_pct": 1.26,
+        "currency": "IDR",
+        "source_status": "fixture_reference"
+      },
+      "articles": [
+        {
+          "ticker": "ISAT",
+          "emiten_name": "PT Indosat Tbk",
+          "raw_title": "Indosat Ooredoo Hutchison catat laba tumbuh solid berkat kolaborasi 5G - Bisnis Indonesia",
+          "source": "Bisnis Indonesia",
+          "published_at": "2026-11-24T09:15:00+00:00",
+          "url": "https://market.bisnis.com/isat-laba-tumbuh",
+          "ingestion_channel": "fixture_sample"
+        }
+      ]
+    },
+    "EXCL": {
+      "ticker": "EXCL",
+      "emiten_name": "PT XLSMART Telecom Sejahtera Tbk",
+      "market_snapshot": {
+        "ticker": "EXCL",
+        "symbol": "EXCL.JK",
+        "market_price_idr": 2260.0,
+        "prev_close_idr": 2290.0,
+        "change_5d_pct": -1.31,
+        "currency": "IDR",
+        "source_status": "fixture_reference"
+      },
+      "articles": [
+        {
+          "ticker": "EXCL",
+          "emiten_name": "PT XLSMART Telecom Sejahtera Tbk",
+          "raw_title": "Pasca merger XLSMART, beban utang dan kompetisi perang tarif picu tekanan margin - Investor Daily",
+          "source": "Investor Daily",
+          "published_at": "2026-11-24T07:45:00+00:00",
+          "url": "https://investor.id/market/excl-margin-pressure",
+          "ingestion_channel": "fixture_sample"
+        }
+      ]
+    }
+  }
+}

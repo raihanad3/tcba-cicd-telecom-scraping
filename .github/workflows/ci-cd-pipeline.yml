@@ -1,0 +1,118 @@
+name: Telecom Profitability Data CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+      - "feature/**"
+  pull_request:
+    branches:
+      - main
+  schedule:
+    # Menjalankan pipeline ingestion otomatis setiap 6 jam (00:00, 06:00, 12:00, 18:00 UTC)
+    - cron: "0 */6 * * *"
+  workflow_dispatch:
+    inputs:
+      deploy_to_azure:
+        description: "Deploy live ingested telecom data to Azure Blob Storage"
+        required: true
+        type: boolean
+        default: true
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  test:
+    name: Test and Build Pipeline
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies and pytest
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-dev.txt
+
+      - name: Run pytest unit & integration suite
+        run: |
+          python -m pytest -v
+
+      - name: Build and validate pipeline fixture output
+        run: |
+          python -m src.pipeline fixture --out-dir data/fixture_out
+
+      - name: Upload verified fixture output artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: telecom-pipeline-fixture-output
+          path: data/fixture_out/
+          retention-days: 7
+
+  deploy:
+    name: Ingest and Deploy to Azure Blob Storage
+    needs: test
+    if: >-
+      github.ref == 'refs/heads/main' &&
+      (github.event_name == 'schedule' ||
+       (github.event_name == 'workflow_dispatch' && inputs.deploy_to_azure == true))
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install runtime dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Download verified CI fixture artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: telecom-pipeline-fixture-output
+          path: data/fixture_out
+
+      - name: Run live telecom & macro ingestion pipeline
+        run: |
+          python -m src.pipeline live --out-dir data/live_out
+
+      - name: Upload live ingestion artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: telecom-live-ingestion-output
+          path: data/live_out/
+          retention-days: 7
+
+      - name: Azure Login via Microsoft Entra ID (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Upload raw, processed, and metadata blobs to Azure Storage
+        run: |
+          python -m src.upload_blob \
+            --out-dir data/live_out \
+            --account "${{ vars.AZURE_STORAGE_ACCOUNT }}" \
+            --container "${{ vars.AZURE_STORAGE_CONTAINER }}"
+
+      - name: Verify uploaded blobs in Azure Storage container
+        run: |
+          az storage blob list \
+            --account-name "${{ vars.AZURE_STORAGE_ACCOUNT }}" \
+            --container-name "${{ vars.AZURE_STORAGE_CONTAINER }}" \
+            --auth-mode login \
+            -o table
